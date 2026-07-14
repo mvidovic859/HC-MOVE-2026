@@ -1,0 +1,54 @@
+<!doctype html><html lang="hr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HC Step Challenge</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f4f7fb;color:#17324d}
+header{padding:16px 20px;background:white;border-bottom:1px solid #dde5ec}
+h1{margin:0;font-size:22px}.layout{display:grid;grid-template-columns:350px 1fr}
+.panel{padding:16px}.card{background:white;border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 3px 14px #0001}
+label{display:block;font-weight:bold;margin:8px 0 6px}input,button{width:100%;padding:12px;border-radius:9px;font-size:16px}
+input{border:1px solid #bdc9d4;margin-bottom:8px}button{border:0;background:#006d5b;color:white;font-weight:bold;cursor:pointer}
+.secondary{margin-top:8px;background:#e8edf2;color:#17324d}.barbox{height:18px;background:#e2e8ee;border-radius:20px;overflow:hidden}
+#bar{height:100%;width:0;background:#138a72;transition:.4s}.big{font-size:28px;font-weight:bold;margin:8px 0}
+.stat{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #edf1f4}
+#map{height:calc(100vh - 76px);min-height:600px}.avatar{font-size:30px}
+.note{font-size:13px;line-height:1.45;color:#66788a}
+@media(max-width:800px){.layout{grid-template-columns:1fr}#map{height:62vh;min-height:430px}}
+</style></head><body>
+<header><h1>🇭🇷 HC Step Challenge – Hrvatska</h1></header>
+<div class="layout"><aside class="panel">
+<div class="card"><label>Ime ili naziv tima</label><input id="name" placeholder="Marija">
+<label>Ukupno koraka</label><input id="steps" type="number" min="0" placeholder="125000">
+<button id="save">Ažuriraj napredak</button><button id="reset" class="secondary">Vrati na početak</button></div>
+<div class="card"><div id="displayName">Sudionik</div><div class="big" id="percent">0%</div>
+<div class="barbox"><div id="bar"></div></div><br>
+<div class="stat"><span>Koraci</span><strong id="stepsStat">0</strong></div>
+<div class="stat"><span>Prijeđeno</span><strong id="kmStat">0 km</strong></div>
+<div class="stat"><span>Preostalo</span><strong id="remainingStat">840 km</strong></div>
+<div class="stat"><span>Najbliža lokacija</span><strong id="locationStat">Vukovar</strong></div></div>
+<div class="card note">Koraci se čuvaju u ovom pregledniku. Za prikaz karte potreban je internet.</div>
+</aside><main id="map"></main></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const route=[[45.3448, 19.0058], [45.5603, 18.6955], [45.3084, 18.409], [45.1602, 18.0123], [45.255, 17.383], [45.475, 16.781], [45.8131, 15.9775], [45.4929, 15.5553], [45.1137, 15.5859], [44.88, 15.616], [44.5461, 15.3747], [44.2391, 15.5258], [44.1178, 15.2206], [43.9392, 15.4486], [43.735, 15.889], [43.5863, 15.923], [43.5164, 16.2502], [43.5081, 16.4402], [43.4446, 16.688], [43.2969, 17.017], [43.056, 17.431], [42.8387, 17.696], [42.64, 18.11]],milestones=[["Vukovar", 45.3448, 19.0058], ["Osijek", 45.5603, 18.6955], ["Đakovo", 45.3084, 18.409], ["Slavonski Brod", 45.1602, 18.0123], ["Zagreb", 45.8131, 15.9775], ["Karlovac", 45.4929, 15.5553], ["Plitvička jezera", 44.88, 15.616], ["Gospić", 44.5461, 15.3747], ["Zadar", 44.1178, 15.2206], ["Šibenik", 43.735, 15.889], ["Split", 43.5081, 16.4402], ["Makarska", 43.2969, 17.017], ["Ston", 42.8387, 17.696], ["Dubrovnik", 42.64, 18.11]];
+const TOTAL_KM=840.1,STEP_METERS=.762,TOTAL_STEPS=Math.round(TOTAL_KM*1000/STEP_METERS);
+const map=L.map('map').setView([44.4,16.8],7);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(map);
+const line=L.polyline(route,{weight:6,opacity:.9}).addTo(map);map.fitBounds(line.getBounds(),{padding:[20,20]});
+milestones.forEach(m=>L.circleMarker([m[1],m[2]],{radius:5,fillOpacity:1}).addTo(map).bindPopup('<b>'+m[0]+'</b>'));
+const icon=L.divIcon({className:'',html:'<div class="avatar">🚶</div>',iconSize:[32,32],iconAnchor:[16,26]});
+const avatar=L.marker(route[0],{icon,zIndexOffset:1000}).addTo(map);
+function d(a,b){const R=6371,p1=a[0]*Math.PI/180,p2=b[0]*Math.PI/180,dp=(b[0]-a[0])*Math.PI/180,dl=(b[1]-a[1])*Math.PI/180,h=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;return R*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h))}
+const c=[0];for(let i=1;i<route.length;i++)c.push(c[i-1]+d(route[i-1],route[i]));const gt=c[c.length-1];
+function point(f){let t=Math.max(0,Math.min(1,f))*gt,i=1;while(i<c.length&&c[i]<t)i++;if(i>=route.length)return route.at(-1);let q=(t-c[i-1])/(c[i]-c[i-1]||1);return[route[i-1][0]+(route[i][0]-route[i-1][0])*q,route[i-1][1]+(route[i][1]-route[i-1][1])*q]}
+function nearest(p){let best=milestones[0],bd=1e9;milestones.forEach(m=>{let x=d(p,[m[1],m[2]]);if(x<bd){bd=x;best=m}});return best[0]}
+function fmt(n){return Math.round(n).toLocaleString('hr-HR')}
+function update(){const n=document.querySelector('#name').value.trim()||'Sudionik',s=Math.max(0,+document.querySelector('#steps').value||0),f=Math.min(1,s/TOTAL_STEPS),km=Math.min(TOTAL_KM,s*STEP_METERS/1000),p=point(f);
+avatar.setLatLng(p).bindPopup('<b>'+n+'</b><br>'+fmt(s)+' koraka').openPopup();
+displayName.textContent=n;percent.textContent=(f*100).toFixed(1).replace('.',',')+'%';bar.style.width=(f*100)+'%';
+stepsStat.textContent=fmt(s);kmStat.textContent=km.toFixed(1).replace('.',',')+' km';remainingStat.textContent=Math.max(0,TOTAL_KM-km).toFixed(1).replace('.',',')+' km';locationStat.textContent=nearest(p);
+localStorage.setItem('hcName',n);localStorage.setItem('hcSteps',s);map.panTo(p)}
+save.onclick=update;reset.onclick=()=>{steps.value=0;update()};steps.onkeydown=e=>{if(e.key==='Enter')update()};
+name.value=localStorage.getItem('hcName')||'';steps.value=localStorage.getItem('hcSteps')||0;update();
+</script></body></html>
