@@ -1,62 +1,115 @@
-<!doctype html><html lang="hr"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>HC Step Challenge</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HC MOVE 2026 – Step Challenge</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f4f7fb;color:#17324d}
-header{padding:16px 20px;background:white;border-bottom:1px solid #dde5ec}
-h1{margin:0;font-size:22px}.layout{display:grid;grid-template-columns:350px 1fr}
-.panel{padding:16px}.card{background:white;border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 3px 14px #0001}
-label{display:block;font-weight:bold;margin:8px 0 6px}input,button{width:100%;padding:12px;border-radius:9px;font-size:16px}
-input{border:1px solid #bdc9d4;margin-bottom:8px}button{border:0;background:#006d5b;color:white;font-weight:bold;cursor:pointer}
-.secondary{margin-top:8px;background:#e8edf2;color:#17324d}.barbox{height:18px;background:#e2e8ee;border-radius:20px;overflow:hidden}
-#bar{height:100%;width:0;background:#138a72;transition:.4s}.big{font-size:28px;font-weight:bold;margin:8px 0}
-.stat{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #edf1f4}
-#map{height:calc(100vh - 76px);min-height:600px}.avatar{font-size:30px}
-.note{font-size:13px;line-height:1.45;color:#66788a}
-@media(max-width:800px){.layout{grid-template-columns:1fr}#map{height:62vh;min-height:430px}}
-</style></head><body>
-<header><h1>🇭🇷 HC Step Challenge – Hrvatska</h1></header>
-<div class="layout"><aside class="panel">
-<div class="card"><label>Ime ili naziv tima</label><input id="name" placeholder="Marija">
-<label>Ukupno koraka</label><input id="steps" type="number" min="0" placeholder="125000">
-<button id="save">Spremi rezultat</button><button id="export" class="secondary">Preuzmi rezultate CSV</button><button id="reset" class="secondary">Vrati na početak</button></div>
-<div class="card"><div id="displayName">Sudionik</div><div class="big" id="percent">0%</div>
-<div class="barbox"><div id="bar"></div></div><br>
-<div class="stat"><span>Koraci</span><strong id="stepsStat">0</strong></div>
-<div class="stat"><span>Prijeđeno</span><strong id="kmStat">0 km</strong></div>
-<div class="stat"><span>Preostalo</span><strong id="remainingStat">840 km</strong></div>
-<div class="stat"><span>Najbliža lokacija</span><strong id="locationStat">Vukovar</strong></div></div>
-<div class="card"><strong>Povijest rezultata</strong>
-<div style="max-height:240px;overflow:auto"><table style="width:100%;font-size:13px;border-collapse:collapse">
-<thead><tr><th>Datum</th><th>Ime</th><th>Koraci</th><th>km</th></tr></thead>
-<tbody id="historyBody"></tbody></table></div></div>
-<div class="card note">Napredak i povijest čuvaju se u ovom pregledniku. Neće se poništiti zatvaranjem stranice. Mogu nestati samo brisanjem podataka preglednika, u privatnom načinu rada ili na drugom uređaju.</div>
-</aside><main id="map"></main></div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+:root{--navy:#12324a;--green:#0b7a68;--green2:#13a389;--bg:#eef3f7;--card:#fff;--muted:#667789;--line:#dce5ec;--gold:#d89b16;--danger:#b42318}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--navy)}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 22px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+.brand{display:flex;align-items:center;gap:12px}.logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--green2),var(--green));display:grid;place-items:center;color:#fff;font-size:23px;box-shadow:0 6px 18px #0b7a6833}
+h1{font-size:21px;margin:0}.subtitle{font-size:13px;color:var(--muted);margin-top:3px}.status{font-size:13px;color:var(--green);font-weight:700}
+.app{display:grid;grid-template-columns:365px minmax(0,1fr);min-height:calc(100vh - 77px)}
+aside{padding:16px;overflow:auto;max-height:calc(100vh - 77px);border-right:1px solid var(--line)}
+main{padding:16px;min-width:0}.card{background:var(--card);border:1px solid #e5ebf0;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 5px 20px #16324b0d}
+.card h2{font-size:16px;margin:0 0 12px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+label{display:block;font-size:13px;font-weight:700;margin:9px 0 6px}input,select,button{font:inherit}
+input,select{width:100%;padding:11px 12px;border:1px solid #bdcad4;border-radius:10px;background:#fff;color:var(--navy);outline:none}input:focus,select:focus{border-color:var(--green2);box-shadow:0 0 0 3px #13a3891c}
+button{border:0;border-radius:10px;padding:11px 12px;font-weight:700;cursor:pointer;transition:.15s}button:hover{transform:translateY(-1px)}
+.primary{width:100%;background:var(--green);color:#fff;margin-top:11px}.secondary{background:#e9eff4;color:var(--navy)}.danger{background:#fff1ef;color:var(--danger);border:1px solid #ffd1ca}.tiny{padding:8px 10px;font-size:12px}
+.notice{font-size:12.5px;color:var(--muted);line-height:1.5}.notice strong{color:var(--navy)}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) 315px;gap:14px}.map-card{padding:0;overflow:hidden;position:relative;min-height:520px}.map-top{position:absolute;left:16px;top:16px;z-index:3;background:#ffffffeb;border:1px solid #dce5ec;border-radius:13px;padding:10px 12px;box-shadow:0 5px 16px #16324b1a}.map-title{font-weight:800}.map-sub{font-size:12px;color:var(--muted);margin-top:3px}
+#mapSvg{display:block;width:100%;height:100%;min-height:520px;background:linear-gradient(#dff2fb,#eef8fc)}
+.land{fill:#f7f4e8;stroke:#cfc8ae;stroke-width:1.2}.route-shadow{fill:none;stroke:#fff;stroke-width:10;stroke-linecap:round;stroke-linejoin:round;opacity:.9}.route{fill:none;stroke:#0b7a68;stroke-width:5.5;stroke-linecap:round;stroke-linejoin:round}.route-done{fill:none;stroke:#f2b01e;stroke-width:6.5;stroke-linecap:round;stroke-linejoin:round}.mile{fill:#fff;stroke:#0b7a68;stroke-width:2}.mile.done{fill:#f2b01e;stroke:#b77900}.mile-label{font-size:11px;font-weight:700;fill:#12324a;paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round}.avatar-ring{fill:#fff;stroke:#f2b01e;stroke-width:3}.avatar-text{font-size:22px}.player-dot{stroke:#fff;stroke-width:2}.player-initial{font-size:9px;font-weight:800;fill:#fff;text-anchor:middle;dominant-baseline:middle}
+.stats .name{font-size:14px;color:var(--muted)}.stats .big{font-size:34px;font-weight:850;margin:4px 0}.progress{height:17px;background:#e2e9ee;border-radius:20px;overflow:hidden}.progress>div{height:100%;background:linear-gradient(90deg,var(--green2),var(--green));width:0;transition:width .35s}.statrow{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #edf1f4}.statrow:last-child{border-bottom:0}.statrow span{color:var(--muted);font-size:13px}.statrow strong{text-align:right}.badge-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.badge{border:1px solid #e2e8ed;border-radius:12px;padding:9px 5px;text-align:center;background:#f8fafb;opacity:.45}.badge.unlocked{opacity:1;background:#fff8e6;border-color:#f2d68e}.badge .icon{font-size:22px}.badge .txt{font-size:10px;font-weight:700;margin-top:4px}
+.lower{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}.table-wrap{overflow:auto;max-height:330px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:10px 8px;border-bottom:1px solid #edf1f4;text-align:left;white-space:nowrap}th{position:sticky;top:0;background:#fff;z-index:1;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em}.rank{font-weight:850}.empty{padding:28px;text-align:center;color:var(--muted)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.file-label{display:block;text-align:center;border-radius:10px;padding:10px;background:#e9eff4;font-weight:700;cursor:pointer}.file-label input{display:none}
+footer{font-size:11.5px;color:var(--muted);padding:4px 2px 12px}
+@media(max-width:1050px){.hero{grid-template-columns:1fr}.stats{display:grid;grid-template-columns:1fr 1fr;gap:14px}.stats .card{margin-bottom:0}.lower{grid-template-columns:1fr}}
+@media(max-width:760px){header{position:static}.app{grid-template-columns:1fr}aside{max-height:none;border-right:0}.hero{display:block}.stats{display:block}.map-card{min-height:430px}#mapSvg{min-height:430px}.lower{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.status{display:none}}
+</style>
+</head>
+<body>
+<header><div class="brand"><div class="logo">🚶</div><div><h1>HC MOVE 2026</h1><div class="subtitle">Virtualni izazov kroz Hrvatsku</div></div></div><div class="status" id="saveStatus">● Podaci su spremljeni</div></header>
+<div class="app">
+<aside>
+  <section class="card"><h2>Unos rezultata</h2>
+    <label for="participant">Sudionik ili tim</label><input id="participant" maxlength="40" placeholder="npr. Marija ili Tim Zagreb">
+    <label for="steps">Ukupno koraka</label><input id="steps" type="number" min="0" step="1" placeholder="npr. 125000">
+    <button class="primary" id="saveBtn">Spremi / ažuriraj rezultat</button>
+  </section>
+  <section class="card"><h2>Odabrani sudionik</h2><select id="selectedParticipant"><option value="">Nema sudionika</option></select></section>
+  <section class="card"><h2>Podaci i sigurnosna kopija</h2>
+    <div class="actions"><button class="secondary tiny" id="csvBtn">Preuzmi CSV</button><button class="secondary tiny" id="backupBtn">Preuzmi backup</button></div>
+    <div style="height:8px"></div><label class="file-label">Uvezi backup<input id="restoreInput" type="file" accept="application/json,.json"></label>
+    <div style="height:8px"></div><button class="danger tiny" id="resetBtn" style="width:100%">Obriši sve podatke</button>
+  </section>
+  <section class="card notice"><strong>Važno:</strong> rezultati se trajno čuvaju u ovom pregledniku i neće nestati zatvaranjem stranice. Backup datoteka služi za prijenos na drugi uređaj ili zaštitu od brisanja podataka preglednika.</section>
+  <footer>Ova verzija radi potpuno samostalno, bez vanjskih biblioteka. Za zajedničku rang-listu na više uređaja potrebna je online baza podataka.</footer>
+</aside>
+<main>
+  <div class="hero">
+    <section class="card map-card">
+      <div class="map-top"><div class="map-title">Vukovar → Dubrovnik</div><div class="map-sub">840 km · približno 1.102.493 koraka</div></div>
+      <svg id="mapSvg" viewBox="0 0 900 600" role="img" aria-label="Virtualna karta Hrvatske s rutom izazova">
+        <path class="land" d="M820 105 L770 95 L735 120 L690 110 L640 140 L575 135 L545 170 L505 178 L470 220 L430 240 L390 280 L350 320 L325 360 L285 390 L245 430 L205 468 L150 500 L115 535 L140 565 L205 548 L250 510 L300 482 L340 445 L390 420 L430 385 L485 355 L515 320 L560 290 L590 250 L630 225 L675 190 L720 165 L770 145 Z"/>
+        <polyline id="routeShadow" class="route-shadow" points=""></polyline>
+        <polyline id="routeLine" class="route" points=""></polyline>
+        <polyline id="routeDone" class="route-done" points=""></polyline>
+        <g id="milestonesLayer"></g><g id="playersLayer"></g><g id="avatarLayer"></g>
+      </svg>
+    </section>
+    <div class="stats">
+      <section class="card"><div class="name" id="currentName">Nema rezultata</div><div class="big" id="currentPercent">0%</div><div class="progress"><div id="progressBar"></div></div>
+        <div class="statrow"><span>Koraci</span><strong id="currentSteps">0</strong></div><div class="statrow"><span>Prijeđeno</span><strong id="currentKm">0 km</strong></div><div class="statrow"><span>Preostalo</span><strong id="remainingKm">840 km</strong></div><div class="statrow"><span>Trenutna lokacija</span><strong id="currentLocation">Vukovar</strong></div>
+      </section>
+      <section class="card"><h2>Osvojene lokacije</h2><div class="badge-grid" id="badgeGrid"></div></section>
+    </div>
+  </div>
+  <div class="lower">
+    <section class="card"><h2>Rang-lista</h2><div class="table-wrap"><table><thead><tr><th>#</th><th>Sudionik</th><th>Koraci</th><th>km</th><th>Napredak</th></tr></thead><tbody id="leaderboardBody"></tbody></table><div class="empty" id="leaderEmpty">Još nema spremljenih rezultata.</div></div></section>
+    <section class="card"><h2>Povijest unosa</h2><div class="table-wrap"><table><thead><tr><th>Datum</th><th>Sudionik</th><th>Koraci</th><th>Promjena</th></tr></thead><tbody id="historyBody"></tbody></table><div class="empty" id="historyEmpty">Povijest je prazna.</div></div></section>
+  </div>
+</main>
+</div>
 <script>
-const route=[[45.3448, 19.0058], [45.5603, 18.6955], [45.3084, 18.409], [45.1602, 18.0123], [45.255, 17.383], [45.475, 16.781], [45.8131, 15.9775], [45.4929, 15.5553], [45.1137, 15.5859], [44.88, 15.616], [44.5461, 15.3747], [44.2391, 15.5258], [44.1178, 15.2206], [43.9392, 15.4486], [43.735, 15.889], [43.5863, 15.923], [43.5164, 16.2502], [43.5081, 16.4402], [43.4446, 16.688], [43.2969, 17.017], [43.056, 17.431], [42.8387, 17.696], [42.64, 18.11]],milestones=[["Vukovar", 45.3448, 19.0058], ["Osijek", 45.5603, 18.6955], ["Đakovo", 45.3084, 18.409], ["Slavonski Brod", 45.1602, 18.0123], ["Zagreb", 45.8131, 15.9775], ["Karlovac", 45.4929, 15.5553], ["Plitvička jezera", 44.88, 15.616], ["Gospić", 44.5461, 15.3747], ["Zadar", 44.1178, 15.2206], ["Šibenik", 43.735, 15.889], ["Split", 43.5081, 16.4402], ["Makarska", 43.2969, 17.017], ["Ston", 42.8387, 17.696], ["Dubrovnik", 42.64, 18.11]];
-const TOTAL_KM=840.1,STEP_METERS=.762,TOTAL_STEPS=Math.round(TOTAL_KM*1000/STEP_METERS);
-const map=L.map('map').setView([44.4,16.8],7);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(map);
-const line=L.polyline(route,{weight:6,opacity:.9}).addTo(map);map.fitBounds(line.getBounds(),{padding:[20,20]});
-milestones.forEach(m=>L.circleMarker([m[1],m[2]],{radius:5,fillOpacity:1}).addTo(map).bindPopup('<b>'+m[0]+'</b>'));
-const icon=L.divIcon({className:'',html:'<div class="avatar">🚶</div>',iconSize:[32,32],iconAnchor:[16,26]});
-const avatar=L.marker(route[0],{icon,zIndexOffset:1000}).addTo(map);
-function d(a,b){const R=6371,p1=a[0]*Math.PI/180,p2=b[0]*Math.PI/180,dp=(b[0]-a[0])*Math.PI/180,dl=(b[1]-a[1])*Math.PI/180,h=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;return R*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h))}
-const c=[0];for(let i=1;i<route.length;i++)c.push(c[i-1]+d(route[i-1],route[i]));const gt=c[c.length-1];
-function point(f){let t=Math.max(0,Math.min(1,f))*gt,i=1;while(i<c.length&&c[i]<t)i++;if(i>=route.length)return route.at(-1);let q=(t-c[i-1])/(c[i]-c[i-1]||1);return[route[i-1][0]+(route[i][0]-route[i-1][0])*q,route[i-1][1]+(route[i][1]-route[i-1][1])*q]}
-function nearest(p){let best=milestones[0],bd=1e9;milestones.forEach(m=>{let x=d(p,[m[1],m[2]]);if(x<bd){bd=x;best=m}});return best[0]}
-function fmt(n){return Math.round(n).toLocaleString('hr-HR')}
-function getHistory(){try{return JSON.parse(localStorage.getItem('hcHistory')||'[]')}catch{return[]}}
-function renderHistory(){historyBody.innerHTML='';getHistory().slice().reverse().forEach(r=>{const tr=document.createElement('tr');tr.innerHTML='<td>'+r.date+'</td><td>'+r.name+'</td><td>'+fmt(r.steps)+'</td><td>'+r.km.toFixed(1).replace('.',',')+'</td>';historyBody.appendChild(tr)})}
-function exportCSV(){const h=getHistory();if(!h.length){alert('Nema spremljenih rezultata.');return}const rows=[['Datum','Ime','Koraci','Kilometri'],...h.map(r=>[r.date,r.name,r.steps,r.km.toFixed(1)])];const csv=rows.map(x=>x.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(';')).join('\n');const b=new Blob(['\ufeff'+csv],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='HC_Step_Challenge_rezultati.csv';a.click()}
-function update(){const n=document.querySelector('#name').value.trim()||'Sudionik',s=Math.max(0,+document.querySelector('#steps').value||0),f=Math.min(1,s/TOTAL_STEPS),km=Math.min(TOTAL_KM,s*STEP_METERS/1000),p=point(f);
-avatar.setLatLng(p).bindPopup('<b>'+n+'</b><br>'+fmt(s)+' koraka').openPopup();
-displayName.textContent=n;percent.textContent=(f*100).toFixed(1).replace('.',',')+'%';bar.style.width=(f*100)+'%';
-stepsStat.textContent=fmt(s);kmStat.textContent=km.toFixed(1).replace('.',',')+' km';remainingStat.textContent=Math.max(0,TOTAL_KM-km).toFixed(1).replace('.',',')+' km';locationStat.textContent=nearest(p);
-localStorage.setItem('hcName',n);localStorage.setItem('hcSteps',s);
-const h=getHistory();h.push({date:new Date().toLocaleString('hr-HR'),name:n,steps:s,km:km});localStorage.setItem('hcHistory',JSON.stringify(h));renderHistory();map.panTo(p)}
-save.onclick=update;export.onclick=exportCSV;reset.onclick=()=>{steps.value=0;update()};steps.onkeydown=e=>{if(e.key==='Enter')update()};
-name.value=localStorage.getItem('hcName')||'';steps.value=localStorage.getItem('hcSteps')||0;update();renderHistory();
-</script></body></html>
+'use strict';
+const TOTAL_KM=840.1, STEP_METERS=0.762, TOTAL_STEPS=Math.round(TOTAL_KM*1000/STEP_METERS), STORAGE_KEY='hcMove2026DataV3';
+const route=[[45.3448,19.0058],[45.5603,18.6955],[45.3084,18.4090],[45.1602,18.0123],[45.8131,15.9775],[45.4929,15.5553],[44.8800,15.6160],[44.5461,15.3747],[44.1178,15.2206],[43.7350,15.8890],[43.5081,16.4402],[43.2969,17.0170],[42.8387,17.6960],[42.6400,18.1100]];
+const milestones=[['Vukovar',0],['Osijek',0.055],['Slavonski Brod',0.17],['Zagreb',0.36],['Karlovac',0.43],['Plitvice',0.53],['Gospić',0.60],['Zadar',0.68],['Šibenik',0.76],['Split',0.83],['Makarska',0.90],['Ston',0.96],['Dubrovnik',1]];
+const colors=['#0b7a68','#2563eb','#9333ea','#db2777','#ea580c','#4d7c0f','#0891b2','#7c3aed'];
+const $=id=>document.getElementById(id);
+let data=loadData();
+function defaultData(){return {participants:{},history:[],selected:''}}
+function loadData(){try{const raw=localStorage.getItem(STORAGE_KEY);if(!raw)return defaultData();const parsed=JSON.parse(raw);return parsed&&parsed.participants&&parsed.history?parsed:defaultData()}catch(e){return defaultData()}}
+function saveData(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));$('saveStatus').textContent='● Podaci su spremljeni'}
+function esc(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function fmt(n){return Math.round(Number(n)||0).toLocaleString('hr-HR')}
+function kmFromSteps(s){return Math.min(TOTAL_KM,Math.max(0,s)*STEP_METERS/1000)}
+function fracFromSteps(s){return Math.min(1,Math.max(0,s)/TOTAL_STEPS)}
+function project(lat,lon){const minLon=14.9,maxLon=19.2,minLat=42.45,maxLat=45.75;return [120+(maxLon-lon)/(maxLon-minLon)*690,90+(maxLat-lat)/(maxLat-minLat)*455]}
+const routePts=route.map(p=>project(p[0],p[1]));
+function pointAt(f){f=Math.max(0,Math.min(1,f));const lengths=[];let total=0;for(let i=1;i<routePts.length;i++){const dx=routePts[i][0]-routePts[i-1][0],dy=routePts[i][1]-routePts[i-1][1],l=Math.hypot(dx,dy);lengths.push(l);total+=l}let target=f*total;for(let i=0;i<lengths.length;i++){if(target<=lengths[i]){const t=lengths[i]?target/lengths[i]:0;return [routePts[i][0]+(routePts[i+1][0]-routePts[i][0])*t,routePts[i][1]+(routePts[i+1][1]-routePts[i][1])*t]}target-=lengths[i]}return routePts[routePts.length-1]}
+function pointsUntil(f){const arr=[];for(let i=0;i<routePts.length;i++){const pFraction=i/(routePts.length-1);if(pFraction<f)arr.push(routePts[i]);else break}arr.push(pointAt(f));return arr.map(p=>p.join(',')).join(' ')}
+function locationAt(f){let name=milestones[0][0];for(const m of milestones){if(f>=m[1])name=m[0];else break}return name}
+function initials(name){const a=name.trim().split(/\s+/).filter(Boolean);return (a[0]?.[0]||'?')+(a.length>1?(a[a.length-1][0]||''):'')}
+function renderMap(){const points=routePts.map(p=>p.join(',')).join(' ');$('routeShadow').setAttribute('points',points);$('routeLine').setAttribute('points',points);const selected=data.participants[data.selected];const f=selected?fracFromSteps(selected.steps):0;$('routeDone').setAttribute('points',pointsUntil(f));
+ let mg='';milestones.forEach((m,i)=>{const p=pointAt(m[1]),done=f>=m[1];mg+=`<circle class="mile ${done?'done':''}" cx="${p[0]}" cy="${p[1]}" r="6"></circle>`;if(i===0||i===3||i===5||i===7||i===9||i===12)mg+=`<text class="mile-label" x="${p[0]+9}" y="${p[1]-8}">${esc(m[0])}</text>`});$('milestonesLayer').innerHTML=mg;
+ const ranked=Object.values(data.participants).sort((a,b)=>b.steps-a.steps);let pg='';ranked.forEach((p,i)=>{if(p.name===data.selected)return;const q=pointAt(fracFromSteps(p.steps));pg+=`<circle class="player-dot" cx="${q[0]}" cy="${q[1]}" r="9" fill="${colors[i%colors.length]}"></circle><text class="player-initial" x="${q[0]}" y="${q[1]+.5}">${esc(initials(p.name))}</text>`});$('playersLayer').innerHTML=pg;
+ const q=pointAt(f);$('avatarLayer').innerHTML=`<circle class="avatar-ring" cx="${q[0]}" cy="${q[1]}" r="18"></circle><text class="avatar-text" x="${q[0]-12}" y="${q[1]+8}">🚶</text>`}
+function renderSelected(){const p=data.participants[data.selected];if(!p){$('currentName').textContent='Nema rezultata';$('currentPercent').textContent='0%';$('progressBar').style.width='0%';$('currentSteps').textContent='0';$('currentKm').textContent='0 km';$('remainingKm').textContent=TOTAL_KM.toFixed(0)+' km';$('currentLocation').textContent='Vukovar'}else{const f=fracFromSteps(p.steps),km=kmFromSteps(p.steps);$('currentName').textContent=p.name;$('currentPercent').textContent=(f*100).toFixed(1).replace('.',',')+'%';$('progressBar').style.width=(f*100)+'%';$('currentSteps').textContent=fmt(p.steps);$('currentKm').textContent=km.toFixed(1).replace('.',',')+' km';$('remainingKm').textContent=Math.max(0,TOTAL_KM-km).toFixed(1).replace('.',',')+' km';$('currentLocation').textContent=locationAt(f)}
+ const f=p?fracFromSteps(p.steps):0;$('badgeGrid').innerHTML=milestones.slice(1).map(m=>`<div class="badge ${f>=m[1]?'unlocked':''}"><div class="icon">${f>=m[1]?'🏅':'🔒'}</div><div class="txt">${esc(m[0])}</div></div>`).join('')}
+function renderSelect(){const names=Object.keys(data.participants).sort((a,b)=>a.localeCompare(b,'hr'));$('selectedParticipant').innerHTML=names.length?names.map(n=>`<option value="${esc(n)}" ${n===data.selected?'selected':''}>${esc(n)}</option>`).join(''):'<option value="">Nema sudionika</option>'}
+function renderLeaderboard(){const list=Object.values(data.participants).sort((a,b)=>b.steps-a.steps);$('leaderEmpty').style.display=list.length?'none':'block';$('leaderboardBody').innerHTML=list.map((p,i)=>{const f=fracFromSteps(p.steps);return `<tr><td class="rank">${i+1}</td><td>${esc(p.name)}</td><td>${fmt(p.steps)}</td><td>${kmFromSteps(p.steps).toFixed(1).replace('.',',')}</td><td>${(f*100).toFixed(1).replace('.',',')}%</td></tr>`}).join('')}
+function renderHistory(){const h=data.history.slice().reverse();$('historyEmpty').style.display=h.length?'none':'block';$('historyBody').innerHTML=h.map(r=>`<tr><td>${esc(r.date)}</td><td>${esc(r.name)}</td><td>${fmt(r.steps)}</td><td>${r.delta>=0?'+':''}${fmt(r.delta)}</td></tr>`).join('')}
+function render(){renderSelect();renderSelected();renderLeaderboard();renderHistory();renderMap()}
+function saveParticipant(){const name=$('participant').value.trim(),steps=Math.floor(Number($('steps').value));if(!name){alert('Upiši ime sudionika ili tima.');$('participant').focus();return}if(!Number.isFinite(steps)||steps<0){alert('Upiši ispravan broj koraka.');$('steps').focus();return}const old=data.participants[name]?.steps||0;data.participants[name]={name,steps,updated:new Date().toISOString()};data.selected=name;data.history.push({date:new Date().toLocaleString('hr-HR'),name,steps,delta:steps-old});if(data.history.length>500)data.history=data.history.slice(-500);saveData();render();$('saveStatus').textContent='● Rezultat je spremljen'}
+function download(filename,text,type){const b=new Blob([text],{type}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
+function exportCsv(){const list=Object.values(data.participants).sort((a,b)=>b.steps-a.steps);if(!list.length){alert('Nema rezultata za izvoz.');return}const rows=[['Rang','Sudionik','Koraci','Kilometri','Napredak %'],...list.map((p,i)=>[i+1,p.name,p.steps,kmFromSteps(p.steps).toFixed(1),(fracFromSteps(p.steps)*100).toFixed(1)])];const csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(';')).join('\n');download('HC_MOVE_2026_rezultati.csv',csv,'text/csv;charset=utf-8')}
+function backup(){download('HC_MOVE_2026_backup.json',JSON.stringify({version:3,exportedAt:new Date().toISOString(),data},null,2),'application/json')}
+function restore(file){const reader=new FileReader();reader.onload=()=>{try{const obj=JSON.parse(reader.result),candidate=obj.data||obj;if(!candidate.participants||!Array.isArray(candidate.history))throw new Error();if(!confirm('Uvoz će zamijeniti trenutne podatke. Nastaviti?'))return;data=candidate;saveData();render();alert('Backup je uspješno uvezen.')}catch(e){alert('Datoteka nije ispravan HC MOVE backup.')}};reader.readAsText(file)}
+$('saveBtn').addEventListener('click',saveParticipant);$('steps').addEventListener('keydown',e=>{if(e.key==='Enter')saveParticipant()});$('selectedParticipant').addEventListener('change',e=>{data.selected=e.target.value;saveData();render();const p=data.participants[data.selected];if(p){$('participant').value=p.name;$('steps').value=p.steps}});$('csvBtn').addEventListener('click',exportCsv);$('backupBtn').addEventListener('click',backup);$('restoreInput').addEventListener('change',e=>{if(e.target.files[0])restore(e.target.files[0]);e.target.value=''});$('resetBtn').addEventListener('click',()=>{const answer=prompt('Za brisanje svih podataka upiši: OBRISI');if(answer==='OBRISI'){data=defaultData();saveData();$('participant').value='';$('steps').value='';render();alert('Svi podaci su obrisani.')}});
+render();
+</script>
+</body></html>
