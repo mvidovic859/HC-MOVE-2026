@@ -20,14 +20,18 @@ input{border:1px solid #bdc9d4;margin-bottom:8px}button{border:0;background:#006
 <div class="layout"><aside class="panel">
 <div class="card"><label>Ime ili naziv tima</label><input id="name" placeholder="Marija">
 <label>Ukupno koraka</label><input id="steps" type="number" min="0" placeholder="125000">
-<button id="save">Ažuriraj napredak</button><button id="reset" class="secondary">Vrati na početak</button></div>
+<button id="save">Spremi rezultat</button><button id="export" class="secondary">Preuzmi rezultate CSV</button><button id="reset" class="secondary">Vrati na početak</button></div>
 <div class="card"><div id="displayName">Sudionik</div><div class="big" id="percent">0%</div>
 <div class="barbox"><div id="bar"></div></div><br>
 <div class="stat"><span>Koraci</span><strong id="stepsStat">0</strong></div>
 <div class="stat"><span>Prijeđeno</span><strong id="kmStat">0 km</strong></div>
 <div class="stat"><span>Preostalo</span><strong id="remainingStat">840 km</strong></div>
 <div class="stat"><span>Najbliža lokacija</span><strong id="locationStat">Vukovar</strong></div></div>
-<div class="card note">Koraci se čuvaju u ovom pregledniku. Za prikaz karte potreban je internet.</div>
+<div class="card"><strong>Povijest rezultata</strong>
+<div style="max-height:240px;overflow:auto"><table style="width:100%;font-size:13px;border-collapse:collapse">
+<thead><tr><th>Datum</th><th>Ime</th><th>Koraci</th><th>km</th></tr></thead>
+<tbody id="historyBody"></tbody></table></div></div>
+<div class="card note">Napredak i povijest čuvaju se u ovom pregledniku. Neće se poništiti zatvaranjem stranice. Mogu nestati samo brisanjem podataka preglednika, u privatnom načinu rada ili na drugom uređaju.</div>
 </aside><main id="map"></main></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -44,11 +48,15 @@ const c=[0];for(let i=1;i<route.length;i++)c.push(c[i-1]+d(route[i-1],route[i]))
 function point(f){let t=Math.max(0,Math.min(1,f))*gt,i=1;while(i<c.length&&c[i]<t)i++;if(i>=route.length)return route.at(-1);let q=(t-c[i-1])/(c[i]-c[i-1]||1);return[route[i-1][0]+(route[i][0]-route[i-1][0])*q,route[i-1][1]+(route[i][1]-route[i-1][1])*q]}
 function nearest(p){let best=milestones[0],bd=1e9;milestones.forEach(m=>{let x=d(p,[m[1],m[2]]);if(x<bd){bd=x;best=m}});return best[0]}
 function fmt(n){return Math.round(n).toLocaleString('hr-HR')}
+function getHistory(){try{return JSON.parse(localStorage.getItem('hcHistory')||'[]')}catch{return[]}}
+function renderHistory(){historyBody.innerHTML='';getHistory().slice().reverse().forEach(r=>{const tr=document.createElement('tr');tr.innerHTML='<td>'+r.date+'</td><td>'+r.name+'</td><td>'+fmt(r.steps)+'</td><td>'+r.km.toFixed(1).replace('.',',')+'</td>';historyBody.appendChild(tr)})}
+function exportCSV(){const h=getHistory();if(!h.length){alert('Nema spremljenih rezultata.');return}const rows=[['Datum','Ime','Koraci','Kilometri'],...h.map(r=>[r.date,r.name,r.steps,r.km.toFixed(1)])];const csv=rows.map(x=>x.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(';')).join('\n');const b=new Blob(['\ufeff'+csv],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='HC_Step_Challenge_rezultati.csv';a.click()}
 function update(){const n=document.querySelector('#name').value.trim()||'Sudionik',s=Math.max(0,+document.querySelector('#steps').value||0),f=Math.min(1,s/TOTAL_STEPS),km=Math.min(TOTAL_KM,s*STEP_METERS/1000),p=point(f);
 avatar.setLatLng(p).bindPopup('<b>'+n+'</b><br>'+fmt(s)+' koraka').openPopup();
 displayName.textContent=n;percent.textContent=(f*100).toFixed(1).replace('.',',')+'%';bar.style.width=(f*100)+'%';
 stepsStat.textContent=fmt(s);kmStat.textContent=km.toFixed(1).replace('.',',')+' km';remainingStat.textContent=Math.max(0,TOTAL_KM-km).toFixed(1).replace('.',',')+' km';locationStat.textContent=nearest(p);
-localStorage.setItem('hcName',n);localStorage.setItem('hcSteps',s);map.panTo(p)}
-save.onclick=update;reset.onclick=()=>{steps.value=0;update()};steps.onkeydown=e=>{if(e.key==='Enter')update()};
-name.value=localStorage.getItem('hcName')||'';steps.value=localStorage.getItem('hcSteps')||0;update();
+localStorage.setItem('hcName',n);localStorage.setItem('hcSteps',s);
+const h=getHistory();h.push({date:new Date().toLocaleString('hr-HR'),name:n,steps:s,km:km});localStorage.setItem('hcHistory',JSON.stringify(h));renderHistory();map.panTo(p)}
+save.onclick=update;export.onclick=exportCSV;reset.onclick=()=>{steps.value=0;update()};steps.onkeydown=e=>{if(e.key==='Enter')update()};
+name.value=localStorage.getItem('hcName')||'';steps.value=localStorage.getItem('hcSteps')||0;update();renderHistory();
 </script></body></html>
